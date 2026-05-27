@@ -1,0 +1,23 @@
+[package]
+name = "launcher-meta"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/iamkaf/launcher-meta"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+futures-util = "0.3.31"
+console_error_panic_hook = "0.1.7"
+js-sys = "0.3.83"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+web-sys = { version = "0.3.83", features = ["AbortSignal"] }
+worker = "0.8.3"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

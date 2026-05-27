@@ -1,0 +1,46 @@
+name = "launcher-meta"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-05-27"
+workers_dev = true
+preview_urls = true
+
+[build]
+command = "worker-build --release"
+
+[vars]
+CACHE_TTL_MINECRAFT = "21600"
+CACHE_TTL_LOADERS = "1800"
+CACHE_TTL_DEPENDENCIES = "1800"
+CACHE_TTL_COMPATIBILITY = "1800"
+
+[[ratelimits]]
+name = "PUBLIC_API_RATE_LIMIT"
+namespace_id = "7001001"
+
+  [ratelimits.simple]
+  limit = 300
+  period = 60
+
+[[ratelimits]]
+name = "REFRESH_RATE_LIMIT"
+namespace_id = "7001002"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+[[routes]]
+pattern = "launcher-meta.kaf.sh"
+custom_domain = true
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true

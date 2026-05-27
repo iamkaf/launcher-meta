@@ -33,7 +33,7 @@ pub fn api_docs() -> Value {
         "license": "Apache-2.0",
         "disclaimers": [
             "launcher-meta is not affiliated with Mojang, Microsoft, FabricMC, Minecraft Forge, NeoForge, Modrinth, ParchmentMC, or Cloudflare.",
-            "Minecraft names, loader names, project names, and service names belong to their respective owners.",
+            "Minecraft names, loader names, Modrinth mod names, and service names belong to their respective owners.",
             "The API reports metadata from upstream services and caches successful responses at the edge. Treat versions as metadata snapshots, not endorsements or compatibility guarantees."
         ],
         "acknowledgements": [
@@ -220,17 +220,17 @@ pub fn api_docs() -> Value {
             {
                 "method": "GET",
                 "path": "/v1/dependencies/{minecraft}",
-                "description": "Returns built-in loader/build dependencies plus Modrinth project metadata for one Minecraft version.",
+                "description": "Returns built-in loader/build dependencies plus Modrinth mod metadata for one Minecraft version.",
                 "path_parameters": {
                     "minecraft": "Minecraft version id, for example 1.21.4"
                 },
                 "query_parameters": {
-                    "projects": {
+                    "modrinth_mods": {
                         "required": false,
-                        "description": "Comma-separated Modrinth project slugs. Replaces the default project list when supplied."
+                        "description": "Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied."
                     }
                 },
-                "default_projects": [
+                "default_modrinth_mods": [
                     "amber",
                     "fabric-api",
                     "modmenu",
@@ -301,7 +301,7 @@ pub fn api_docs() -> Value {
                                 "source": "https://modrinth.com/mod/fabric-api"
                             },
                             {
-                                "id": "bad-project",
+                                "id": "bad-mod",
                                 "kind": "mod",
                                 "status": "error",
                                 "version": null,
@@ -311,7 +311,7 @@ pub fn api_docs() -> Value {
                                     "fabric": null
                                 },
                                 "coordinates": null,
-                                "source": "https://modrinth.com/mod/bad-project",
+                                "source": "https://modrinth.com/mod/bad-mod",
                                 "error": "upstream returned HTTP 404"
                             }
                         ]
@@ -322,12 +322,12 @@ pub fn api_docs() -> Value {
             },
             {
                 "method": "GET",
-                "path": "/v1/projects/compatibility",
-                "description": "Returns loader-specific project versions across multiple Minecraft versions.",
+                "path": "/v1/modrinth_mods/compatibility",
+                "description": "Returns loader-specific Modrinth mod versions across multiple Minecraft versions.",
                 "query_parameters": {
-                    "projects": {
+                    "modrinth_mods": {
                         "required": true,
-                        "description": "Comma-separated Modrinth or built-in project ids."
+                        "description": "Comma-separated Modrinth mod slugs."
                     },
                     "minecraft": {
                         "required": true,
@@ -335,9 +335,9 @@ pub fn api_docs() -> Value {
                     }
                 },
                 "cache": "1800 seconds",
-                "failure_model": "Unresolved project/version pairs return null loader fields.",
+                "failure_model": "Unresolved mod/version pairs return null loader fields.",
                 "data_shape": {
-                    "projects": {
+                    "modrinth_mods": {
                         "fabric-api": {
                             "1.21.4": {
                                 "forge": null,
@@ -350,7 +350,7 @@ pub fn api_docs() -> Value {
                 "example_response": {
                     "success": true,
                     "data": {
-                        "projects": {
+                        "modrinth_mods": {
                             "fabric-api": {
                                 "1.21.1": {
                                     "forge": null,
@@ -400,6 +400,6 @@ mod tests {
         assert!(paths.contains(&"/v1/minecraft/versions"));
         assert!(paths.contains(&"/v1/loaders/{minecraft}"));
         assert!(paths.contains(&"/v1/dependencies/{minecraft}"));
-        assert!(paths.contains(&"/v1/projects/compatibility"));
+        assert!(paths.contains(&"/v1/modrinth_mods/compatibility"));
     }
 }

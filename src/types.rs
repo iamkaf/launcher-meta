@@ -65,7 +65,7 @@ pub struct DependenciesData {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CompatibilityData {
-    pub projects: BTreeMap<String, BTreeMap<String, LoaderVersions>>,
+    pub modrinth_mods: BTreeMap<String, BTreeMap<String, LoaderVersions>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

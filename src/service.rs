@@ -190,11 +190,11 @@ fn loader_error(loader: &str, source: &str, error: String) -> LoaderItem {
 #[cfg(target_arch = "wasm32")]
 pub async fn dependencies_for_minecraft(
     minecraft: &str,
-    projects: &[String],
+    modrinth_mods: &[String],
     config: &UpstreamConfig,
 ) -> DependenciesData {
     let mut ids: Vec<String> = BUILT_INS.iter().map(|id| id.to_string()).collect();
-    ids.extend(projects.iter().cloned());
+    ids.extend(modrinth_mods.iter().cloned());
     ids = unique_preserving_order(ids);
 
     let futures = ids
@@ -545,39 +545,45 @@ fn dependency_error(
 
 #[cfg(target_arch = "wasm32")]
 pub async fn compatibility(
-    projects: &[String],
+    modrinth_mods: &[String],
     minecraft_versions: &[String],
     config: &UpstreamConfig,
 ) -> CompatibilityData {
     let mut out: BTreeMap<String, BTreeMap<String, LoaderVersions>> = BTreeMap::new();
-    let futures = projects.iter().flat_map(|project| {
+    let futures = modrinth_mods.iter().flat_map(|modrinth_mod| {
         minecraft_versions.iter().map(move |minecraft| async move {
-            let item = dependency_for_minecraft(project, minecraft, config).await;
-            (project.clone(), minecraft.clone(), item.loader_versions)
+            let item = dependency_for_minecraft(modrinth_mod, minecraft, config).await;
+            (
+                modrinth_mod.clone(),
+                minecraft.clone(),
+                item.loader_versions,
+            )
         })
     });
 
-    for (project, minecraft, loaders) in join_all(futures).await {
-        out.entry(project).or_default().insert(minecraft, loaders);
+    for (modrinth_mod, minecraft, loaders) in join_all(futures).await {
+        out.entry(modrinth_mod)
+            .or_default()
+            .insert(minecraft, loaders);
     }
 
-    CompatibilityData { projects: out }
+    CompatibilityData { modrinth_mods: out }
 }
 
 #[cfg(test)]
 pub fn compatibility_nulls(
-    projects: &[String],
+    modrinth_mods: &[String],
     minecraft_versions: &[String],
 ) -> CompatibilityData {
     let mut out = BTreeMap::new();
-    for project in projects {
+    for modrinth_mod in modrinth_mods {
         let mut versions = BTreeMap::new();
         for minecraft in minecraft_versions {
             versions.insert(minecraft.clone(), LoaderVersions::default());
         }
-        out.insert(project.clone(), versions);
+        out.insert(modrinth_mod.clone(), versions);
     }
-    CompatibilityData { projects: out }
+    CompatibilityData { modrinth_mods: out }
 }
 
 #[cfg(test)]
@@ -599,10 +605,10 @@ mod tests {
 
     #[test]
     fn compatibility_null_shape_contains_requested_entries() {
-        let projects = vec!["amber".to_string()];
+        let modrinth_mods = vec!["amber".to_string()];
         let versions = vec!["1.21.1".to_string(), "1.21.4".to_string()];
-        let data = compatibility_nulls(&projects, &versions);
-        assert!(data.projects["amber"]["1.21.1"].fabric.is_none());
-        assert!(data.projects["amber"]["1.21.4"].forge.is_none());
+        let data = compatibility_nulls(&modrinth_mods, &versions);
+        assert!(data.modrinth_mods["amber"]["1.21.1"].fabric.is_none());
+        assert!(data.modrinth_mods["amber"]["1.21.4"].forge.is_none());
     }
 }

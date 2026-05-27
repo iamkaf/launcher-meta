@@ -48,7 +48,7 @@ pub const BUILT_INS: &[&str] = &[
     "loom",
 ];
 
-pub const DEFAULT_PROJECTS: &[&str] = &[
+pub const DEFAULT_MODRINTH_MODS: &[&str] = &[
     "amber",
     "fabric-api",
     "modmenu",

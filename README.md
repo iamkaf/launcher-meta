@@ -19,7 +19,7 @@
 
 ---
 
-`launcher-meta` gives launchers, build scripts, and release tooling one place to ask for current Minecraft versions, loader versions, build-tool versions, and Modrinth project compatibility.
+`launcher-meta` gives launchers, build scripts, and release tooling one place to ask for current Minecraft versions, loader versions, build-tool versions, and Modrinth mod compatibility.
 
 The API runs at `https://launcher-meta.kaf.sh/v1` and returns JSON for every route.
 
@@ -32,11 +32,11 @@ Ask for metadata
   -> refresh with a header when you need fresh data now
 ```
 
-Batch endpoints keep returning useful data when one upstream project fails. Failed items carry `status: "error"` and an `error` field.
+Batch endpoints keep returning useful data when one upstream mod fails. Failed items carry `status: "error"` and an `error` field.
 
 ## Disclaimers
 
-`launcher-meta` is not affiliated with Mojang, Microsoft, FabricMC, Minecraft Forge, NeoForge, Modrinth, ParchmentMC, or Cloudflare. Minecraft names, loader names, project names, and service names belong to their respective owners.
+`launcher-meta` is not affiliated with Mojang, Microsoft, FabricMC, Minecraft Forge, NeoForge, Modrinth, ParchmentMC, or Cloudflare. Minecraft names, loader names, Modrinth mod names, and service names belong to their respective owners.
 
 The API reports metadata from upstream services and caches successful responses at the edge. Treat versions as metadata snapshots, not as an endorsement or guarantee that a dependency is safe, compatible with every modpack, or available forever.
 
@@ -209,15 +209,15 @@ Example response:
 
 ### `GET /v1/dependencies/{minecraft}`
 
-Returns built-in loader/build dependencies plus Modrinth project metadata for one Minecraft version.
+Returns built-in loader/build dependencies plus Modrinth mod metadata for one Minecraft version.
 
 | Query | Required | Description |
 | --- | --- | --- |
-| `projects` | No | Comma-separated Modrinth project slugs. Replaces the default project list when supplied |
+| `modrinth_mods` | No | Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied |
 
-Default Modrinth projects:
+Default Modrinth mods:
 
-| Project |
+| Mod |
 | --- |
 | `amber` |
 | `fabric-api` |
@@ -243,18 +243,18 @@ Dependency items include:
 
 | Field | Description |
 | --- | --- |
-| `id` | Dependency or project id |
+| `id` | Dependency or Modrinth mod id |
 | `kind` | `loader`, `mapping`, `tool`, or `mod` |
 | `status` | `ok`, `error`, or `unavailable` |
 | `version` | Resolved version, or `null` |
-| `loader_versions` | Loader-specific project versions |
+| `loader_versions` | Loader-specific mod versions |
 | `coordinates` | Maven coordinate, or `null` |
 | `source` | Upstream source URL |
 | `error` | Present when `status` is `error` |
 
 ```sh
 curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4"
-curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4?projects=fabric-api,modmenu,sodium"
+curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4?modrinth_mods=fabric-api,modmenu,sodium"
 ```
 
 Example response:
@@ -292,7 +292,7 @@ Example response:
         "source": "https://modrinth.com/mod/fabric-api"
       },
       {
-        "id": "bad-project",
+        "id": "bad-mod",
         "kind": "mod",
         "status": "error",
         "version": null,
@@ -302,7 +302,7 @@ Example response:
           "fabric": null
         },
         "coordinates": null,
-        "source": "https://modrinth.com/mod/bad-project",
+        "source": "https://modrinth.com/mod/bad-mod",
         "error": "upstream returned HTTP 404"
       }
     ]
@@ -312,19 +312,19 @@ Example response:
 }
 ```
 
-### `GET /v1/projects/compatibility`
+### `GET /v1/modrinth_mods/compatibility`
 
-Returns loader-specific project versions across multiple Minecraft versions.
+Returns loader-specific Modrinth mod versions across multiple Minecraft versions.
 
 | Query | Required | Description |
 | --- | --- | --- |
-| `projects` | Yes | Comma-separated Modrinth or built-in project ids |
+| `modrinth_mods` | Yes | Comma-separated Modrinth mod slugs |
 | `minecraft` | Yes | Comma-separated Minecraft version ids |
 
-Unresolved project/version pairs return `null` loader fields.
+Unresolved mod/version pairs return `null` loader fields.
 
 ```sh
-curl "https://launcher-meta.kaf.sh/v1/projects/compatibility?projects=fabric-api,modmenu&minecraft=1.21.1,1.21.4"
+curl "https://launcher-meta.kaf.sh/v1/modrinth_mods/compatibility?modrinth_mods=fabric-api,modmenu&minecraft=1.21.1,1.21.4"
 ```
 
 Example response:
@@ -333,7 +333,7 @@ Example response:
 {
   "success": true,
   "data": {
-    "projects": {
+    "modrinth_mods": {
       "fabric-api": {
         "1.21.1": {
           "forge": null,
@@ -362,7 +362,7 @@ Example response:
 | `/v1/minecraft/versions` | Dynamic |
 | `/v1/loaders/{minecraft}` | 30 minutes |
 | `/v1/dependencies/{minecraft}` | 30 minutes |
-| `/v1/projects/compatibility` | 30 minutes |
+| `/v1/modrinth_mods/compatibility` | 30 minutes |
 
 Minecraft version data uses a tighter release-window policy:
 

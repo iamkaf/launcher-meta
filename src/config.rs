@@ -29,6 +29,7 @@ pub const NEOFORGE_LEGACY_METADATA_URL: &str =
 pub const MODRINTH_PROJECT_BASE_URL: &str = "https://api.modrinth.com/v2/project";
 pub const PARCHMENT_REPOSITORY_URL: &str =
     "https://ldtteam.jfrog.io/artifactory/parchmentmc-public/";
+pub const PARCHMENT_HEALTH_URL: &str = "https://ldtteam.jfrog.io/artifactory/parchmentmc-public/org/parchmentmc/data/parchment-1.21.4/maven-metadata.xml";
 pub const PARCHMENT_BASE_URL: &str = "https://ldtteam.jfrog.io/artifactory/parchmentmc-public/org/parchmentmc/data/parchment-{version}/maven-metadata.xml";
 pub const NEOFORM_METADATA_URL: &str =
     "https://maven.neoforged.net/releases/net/neoforged/neoform/maven-metadata.xml";

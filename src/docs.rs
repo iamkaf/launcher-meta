@@ -262,6 +262,9 @@ pub fn api_docs() -> Value {
                 ],
                 "cache": "1800 seconds",
                 "failure_model": "Partial failures return HTTP 200 with per-item status=error.",
+                "rules": {
+                    "parchment": "Parchment is unavailable for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at 26.1."
+                },
                 "data_shape": {
                     "minecraft": "1.21.4",
                     "dependencies": [

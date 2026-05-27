@@ -241,6 +241,8 @@ Built-ins are always included:
 | `moddev-gradle` |
 | `loom` |
 
+Parchment is returned as `status: "unavailable"` for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at `26.1`.
+
 Dependency items include:
 
 | Field | Description |

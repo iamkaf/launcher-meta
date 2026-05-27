@@ -290,6 +290,19 @@ fn loader_dependency(id: &str, kind: &str, loader: LoaderItem) -> DependencyItem
 
 #[cfg(target_arch = "wasm32")]
 async fn resolve_parchment(minecraft: &str, config: &UpstreamConfig) -> DependencyItem {
+    if is_unobfuscated_minecraft(minecraft) {
+        return DependencyItem {
+            id: "parchment".to_string(),
+            kind: "mapping".to_string(),
+            status: ItemStatus::Unavailable,
+            version: None,
+            loader_versions: LoaderVersions::default(),
+            coordinates: None,
+            source: "https://maven.parchmentmc.org/".to_string(),
+            error: None,
+        };
+    }
+
     let candidates = parchment_candidates(minecraft);
     for candidate in candidates {
         let url = PARCHMENT_BASE_URL.replace("{version}", &candidate);
@@ -338,6 +351,19 @@ fn parchment_candidates(minecraft: &str) -> Vec<String> {
         }
     }
     candidates
+}
+
+fn is_unobfuscated_minecraft(minecraft: &str) -> bool {
+    let core = minecraft.split('-').next().unwrap_or(minecraft);
+    let mut parts = core.split('.');
+    let Some(major) = parts.next().and_then(|value| value.parse::<u32>().ok()) else {
+        return false;
+    };
+    let Some(minor) = parts.next().and_then(|value| value.parse::<u32>().ok()) else {
+        return false;
+    };
+
+    major > 26 || (major == 26 && minor >= 1)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -602,5 +628,15 @@ mod tests {
         let data = compatibility_nulls(&mods, &versions);
         assert!(data.mods["amber"]["1.21.1"].fabric.is_none());
         assert!(data.mods["amber"]["1.21.4"].forge.is_none());
+    }
+
+    #[test]
+    fn detects_unobfuscated_minecraft_versions() {
+        assert!(!is_unobfuscated_minecraft("1.21.4"));
+        assert!(!is_unobfuscated_minecraft("26.0"));
+        assert!(is_unobfuscated_minecraft("26.1"));
+        assert!(is_unobfuscated_minecraft("26.1.2"));
+        assert!(is_unobfuscated_minecraft("26.2-pre-1"));
+        assert!(is_unobfuscated_minecraft("27.0"));
     }
 }

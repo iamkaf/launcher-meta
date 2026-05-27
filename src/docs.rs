@@ -88,10 +88,6 @@ pub fn api_docs() -> Value {
             },
             "compatibility_minecraft_versions": {
                 "max_entries": 16
-            },
-            "deprecated_query_parameters": {
-                "projects": "rejected; use mods",
-                "modrinth_mods": "rejected; use mods"
             }
         },
         "endpoints": [

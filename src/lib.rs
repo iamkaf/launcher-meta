@@ -17,6 +17,7 @@ use crate::util::{
     compatibility_cache_key, current_utc_day, dependency_cache_key,
     minecraft_manifest_ttl_for_utc_day, normalize_list, now_iso, rate_limit_key,
     validate_compatibility_minecraft_versions, validate_minecraft, validate_mods,
+    validate_query_keys,
 };
 #[cfg(target_arch = "wasm32")]
 use std::collections::BTreeMap;
@@ -51,9 +52,22 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
 
     let upstream = upstream_config(&env);
     let response = match route.as_slice() {
-        ["v1"] => json_ok(ApiResponse::success(docs::api_docs(), now_iso())),
-        ["v1", "health"] => health(&upstream).await,
+        ["v1"] => {
+            if let Err(error) = validate_request_query(&req, &[]) {
+                return json_error(&error, 400);
+            }
+            json_ok(ApiResponse::success(docs::api_docs(), now_iso()))
+        }
+        ["v1", "health"] => {
+            if let Err(error) = validate_request_query(&req, &[]) {
+                return json_error(&error, 400);
+            }
+            health(&upstream).await
+        }
         ["v1", "minecraft", "versions"] => {
+            if let Err(error) = validate_request_query(&req, &[]) {
+                return json_error(&error, 400);
+            }
             let upstream = upstream.clone();
             cached(
                 req,
@@ -70,6 +84,9 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
             .await
         }
         ["v1", "loaders", minecraft] => {
+            if let Err(error) = validate_request_query(&req, &[]) {
+                return json_error(&error, 400);
+            }
             if let Err(error) = route_minecraft(minecraft) {
                 return json_error(&error, 400);
             }
@@ -94,11 +111,7 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
             if let Err(error) = route_minecraft(minecraft) {
                 return json_error(&error, 400);
             }
-            let query = req
-                .url()?
-                .query_pairs()
-                .into_owned()
-                .collect::<BTreeMap<_, _>>();
+            let query = request_query(&req)?;
             if let Err(error) = validate_query_keys(&query, &["mods"]) {
                 return json_error(&error, 400);
             }
@@ -127,11 +140,7 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
             .await
         }
         ["v1", "mods", "compatibility"] => {
-            let query = req
-                .url()?
-                .query_pairs()
-                .into_owned()
-                .collect::<BTreeMap<_, _>>();
+            let query = request_query(&req)?;
             if let Err(error) = validate_query_keys(&query, &["minecraft", "mods"]) {
                 return json_error(&error, 400);
             }
@@ -241,15 +250,23 @@ fn route_minecraft(minecraft: &str) -> std::result::Result<(), String> {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn validate_query_keys(
-    query: &BTreeMap<String, String>,
-    allowed: &[&str],
-) -> std::result::Result<(), String> {
-    if let Some(key) = query.keys().find(|key| !allowed.contains(&key.as_str())) {
-        Err(format!("unsupported query parameter: {key}"))
-    } else {
-        Ok(())
-    }
+fn request_query(req: &Request) -> Result<BTreeMap<String, String>> {
+    Ok(req
+        .url()?
+        .query_pairs()
+        .into_owned()
+        .collect::<BTreeMap<_, _>>())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn validate_request_query(req: &Request, allowed: &[&str]) -> std::result::Result<(), String> {
+    let query = req
+        .url()
+        .map_err(|error| error.to_string())?
+        .query_pairs()
+        .into_owned()
+        .collect::<BTreeMap<_, _>>();
+    validate_query_keys(&query, allowed)
 }
 
 #[cfg(target_arch = "wasm32")]

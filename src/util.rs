@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::config::{
     MAX_COMPATIBILITY_MINECRAFT_VERSIONS, MAX_MOD_ID_LENGTH, MAX_MODS_PER_REQUEST,
@@ -53,6 +53,17 @@ pub fn compatibility_cache_key(mods: &[String], minecraft_versions: &[String]) -
 
 pub fn rate_limit_key(client: &str, bucket: &str) -> String {
     format!("{bucket}:{}", client.trim().to_ascii_lowercase())
+}
+
+pub fn validate_query_keys(
+    query: &BTreeMap<String, String>,
+    allowed: &[&str],
+) -> Result<(), String> {
+    if let Some(key) = query.keys().find(|key| !allowed.contains(&key.as_str())) {
+        Err(format!("unsupported query parameter: {key}"))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn validate_minecraft(version: &str) -> Result<(), String> {
@@ -209,5 +220,16 @@ mod tests {
     #[test]
     fn builds_stable_rate_limit_keys() {
         assert_eq!(rate_limit_key(" 203.0.113.10 ", "api"), "api:203.0.113.10");
+    }
+
+    #[test]
+    fn rejects_unknown_query_keys() {
+        let mut query = BTreeMap::new();
+        query.insert("mods".to_string(), "fabric-api".to_string());
+        assert!(validate_query_keys(&query, &["mods"]).is_ok());
+        assert_eq!(
+            validate_query_keys(&query, &["minecraft"]).unwrap_err(),
+            "unsupported query parameter: mods"
+        );
     }
 }

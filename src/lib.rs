@@ -99,8 +99,8 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
-            if query.contains_key("projects") || query.contains_key("modrinth_mods") {
-                return json_error("use mods query parameter", 400);
+            if let Err(error) = validate_query_keys(&query, &["mods"]) {
+                return json_error(&error, 400);
             }
             let mods = normalize_list(query.get("mods").map(String::as_str), DEFAULT_MODS);
             if let Err(error) = validate_mods(&mods) {
@@ -132,8 +132,8 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
-            if query.contains_key("projects") || query.contains_key("modrinth_mods") {
-                return json_error("use mods query parameter", 400);
+            if let Err(error) = validate_query_keys(&query, &["minecraft", "mods"]) {
+                return json_error(&error, 400);
             }
             let Some(mods_raw) = query.get("mods") else {
                 return json_error("mods query parameter is required", 400);
@@ -238,6 +238,18 @@ fn upstream_config(env: &Env) -> service::UpstreamConfig {
 #[cfg(target_arch = "wasm32")]
 fn route_minecraft(minecraft: &str) -> std::result::Result<(), String> {
     validate_minecraft(minecraft)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn validate_query_keys(
+    query: &BTreeMap<String, String>,
+    allowed: &[&str],
+) -> std::result::Result<(), String> {
+    if let Some(key) = query.keys().find(|key| !allowed.contains(&key.as_str())) {
+        Err(format!("unsupported query parameter: {key}"))
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(target_arch = "wasm32")]

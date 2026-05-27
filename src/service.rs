@@ -217,19 +217,16 @@ async fn dependency_for_minecraft(
         "forge" => loader_dependency(
             "forge",
             "loader",
-            minecraft,
             resolve_forge_loader(minecraft, config).await,
         ),
         "neoforge" => loader_dependency(
             "neoforge",
             "loader",
-            minecraft,
             resolve_neoforge_loader(minecraft, config).await,
         ),
         "fabric-loader" => loader_dependency(
             "fabric-loader",
             "loader",
-            minecraft,
             resolve_fabric_loader(minecraft, config).await,
         ),
         "parchment" => resolve_parchment(minecraft, config).await,
@@ -270,7 +267,7 @@ async fn dependency_for_minecraft(
     }
 }
 
-fn loader_dependency(id: &str, kind: &str, minecraft: &str, loader: LoaderItem) -> DependencyItem {
+fn loader_dependency(id: &str, kind: &str, loader: LoaderItem) -> DependencyItem {
     let mut loader_versions = LoaderVersions::default();
     match loader.loader.as_str() {
         "forge" => loader_versions.forge = loader.version.clone(),
@@ -287,9 +284,7 @@ fn loader_dependency(id: &str, kind: &str, minecraft: &str, loader: LoaderItem) 
         loader_versions,
         coordinates: loader.maven,
         source: loader.source,
-        error: loader
-            .error
-            .or_else(|| (minecraft.is_empty()).then(|| "empty Minecraft version".to_string())),
+        error: loader.error,
     }
 }
 

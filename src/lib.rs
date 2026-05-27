@@ -99,11 +99,8 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
-            let modrinth_mods = normalize_list(
-                query.get("modrinth_mods").map(String::as_str),
-                DEFAULT_MODRINTH_MODS,
-            );
-            let key = dependency_cache_key(minecraft, &modrinth_mods);
+            let mods = normalize_list(query.get("mods").map(String::as_str), DEFAULT_MODS);
+            let key = dependency_cache_key(minecraft, &mods);
             let upstream = upstream.clone();
             cached(
                 req,
@@ -117,33 +114,29 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 ),
                 || async move {
                     let data =
-                        service::dependencies_for_minecraft(minecraft, &modrinth_mods, &upstream)
-                            .await;
+                        service::dependencies_for_minecraft(minecraft, &mods, &upstream).await;
                     Ok(ApiResponse::success(data, now_iso()))
                 },
             )
             .await
         }
-        ["v1", "modrinth_mods", "compatibility"] => {
+        ["v1", "mods", "compatibility"] => {
             let query = req
                 .url()?
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
-            let Some(modrinth_mods_raw) = query.get("modrinth_mods") else {
-                return json_error("modrinth_mods query parameter is required", 400);
+            let Some(mods_raw) = query.get("mods") else {
+                return json_error("mods query parameter is required", 400);
             };
             let Some(minecraft_raw) = query.get("minecraft") else {
                 return json_error("minecraft query parameter is required", 400);
             };
 
-            let modrinth_mods = normalize_list(Some(modrinth_mods_raw), &[]);
+            let mods = normalize_list(Some(mods_raw), &[]);
             let minecraft_versions = normalize_list(Some(minecraft_raw), &[]);
-            if modrinth_mods.is_empty() || minecraft_versions.is_empty() {
-                return json_error(
-                    "modrinth_mods and minecraft query parameters must not be empty",
-                    400,
-                );
+            if mods.is_empty() || minecraft_versions.is_empty() {
+                return json_error("mods and minecraft query parameters must not be empty", 400);
             }
             for minecraft in &minecraft_versions {
                 if let Err(error) = route_minecraft(minecraft) {
@@ -151,7 +144,7 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 }
             }
 
-            let key = compatibility_cache_key(&modrinth_mods, &minecraft_versions);
+            let key = compatibility_cache_key(&mods, &minecraft_versions);
             let upstream = upstream.clone();
             cached(
                 req,
@@ -164,9 +157,7 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                     DEFAULT_CACHE_TTL_COMPATIBILITY,
                 ),
                 || async move {
-                    let data =
-                        service::compatibility(&modrinth_mods, &minecraft_versions, &upstream)
-                            .await;
+                    let data = service::compatibility(&mods, &minecraft_versions, &upstream).await;
                     Ok(ApiResponse::success(data, now_iso()))
                 },
             )

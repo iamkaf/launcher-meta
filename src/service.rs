@@ -190,11 +190,11 @@ fn loader_error(loader: &str, source: &str, error: String) -> LoaderItem {
 #[cfg(target_arch = "wasm32")]
 pub async fn dependencies_for_minecraft(
     minecraft: &str,
-    modrinth_mods: &[String],
+    mods: &[String],
     config: &UpstreamConfig,
 ) -> DependenciesData {
     let mut ids: Vec<String> = BUILT_INS.iter().map(|id| id.to_string()).collect();
-    ids.extend(modrinth_mods.iter().cloned());
+    ids.extend(mods.iter().cloned());
     ids = unique_preserving_order(ids);
 
     let futures = ids
@@ -545,12 +545,12 @@ fn dependency_error(
 
 #[cfg(target_arch = "wasm32")]
 pub async fn compatibility(
-    modrinth_mods: &[String],
+    mods: &[String],
     minecraft_versions: &[String],
     config: &UpstreamConfig,
 ) -> CompatibilityData {
     let mut out: BTreeMap<String, BTreeMap<String, LoaderVersions>> = BTreeMap::new();
-    let futures = modrinth_mods.iter().flat_map(|modrinth_mod| {
+    let futures = mods.iter().flat_map(|modrinth_mod| {
         minecraft_versions.iter().map(move |minecraft| async move {
             let item = dependency_for_minecraft(modrinth_mod, minecraft, config).await;
             (
@@ -567,23 +567,20 @@ pub async fn compatibility(
             .insert(minecraft, loaders);
     }
 
-    CompatibilityData { modrinth_mods: out }
+    CompatibilityData { mods: out }
 }
 
 #[cfg(test)]
-pub fn compatibility_nulls(
-    modrinth_mods: &[String],
-    minecraft_versions: &[String],
-) -> CompatibilityData {
+pub fn compatibility_nulls(mods: &[String], minecraft_versions: &[String]) -> CompatibilityData {
     let mut out = BTreeMap::new();
-    for modrinth_mod in modrinth_mods {
+    for modrinth_mod in mods {
         let mut versions = BTreeMap::new();
         for minecraft in minecraft_versions {
             versions.insert(minecraft.clone(), LoaderVersions::default());
         }
         out.insert(modrinth_mod.clone(), versions);
     }
-    CompatibilityData { modrinth_mods: out }
+    CompatibilityData { mods: out }
 }
 
 #[cfg(test)]
@@ -605,10 +602,10 @@ mod tests {
 
     #[test]
     fn compatibility_null_shape_contains_requested_entries() {
-        let modrinth_mods = vec!["amber".to_string()];
+        let mods = vec!["amber".to_string()];
         let versions = vec!["1.21.1".to_string(), "1.21.4".to_string()];
-        let data = compatibility_nulls(&modrinth_mods, &versions);
-        assert!(data.modrinth_mods["amber"]["1.21.1"].fabric.is_none());
-        assert!(data.modrinth_mods["amber"]["1.21.4"].forge.is_none());
+        let data = compatibility_nulls(&mods, &versions);
+        assert!(data.mods["amber"]["1.21.1"].fabric.is_none());
+        assert!(data.mods["amber"]["1.21.4"].forge.is_none());
     }
 }

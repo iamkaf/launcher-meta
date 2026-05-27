@@ -213,7 +213,7 @@ Returns built-in loader/build dependencies plus Modrinth mod metadata for one Mi
 
 | Query | Required | Description |
 | --- | --- | --- |
-| `modrinth_mods` | No | Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied |
+| `mods` | No | Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied |
 
 Default Modrinth mods:
 
@@ -254,7 +254,7 @@ Dependency items include:
 
 ```sh
 curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4"
-curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4?modrinth_mods=fabric-api,modmenu,sodium"
+curl "https://launcher-meta.kaf.sh/v1/dependencies/1.21.4?mods=fabric-api,modmenu,sodium"
 ```
 
 Example response:
@@ -312,19 +312,19 @@ Example response:
 }
 ```
 
-### `GET /v1/modrinth_mods/compatibility`
+### `GET /v1/mods/compatibility`
 
 Returns loader-specific Modrinth mod versions across multiple Minecraft versions.
 
 | Query | Required | Description |
 | --- | --- | --- |
-| `modrinth_mods` | Yes | Comma-separated Modrinth mod slugs |
+| `mods` | Yes | Comma-separated Modrinth mod slugs |
 | `minecraft` | Yes | Comma-separated Minecraft version ids |
 
 Unresolved mod/version pairs return `null` loader fields.
 
 ```sh
-curl "https://launcher-meta.kaf.sh/v1/modrinth_mods/compatibility?modrinth_mods=fabric-api,modmenu&minecraft=1.21.1,1.21.4"
+curl "https://launcher-meta.kaf.sh/v1/mods/compatibility?mods=fabric-api,modmenu&minecraft=1.21.1,1.21.4"
 ```
 
 Example response:
@@ -333,7 +333,7 @@ Example response:
 {
   "success": true,
   "data": {
-    "modrinth_mods": {
+    "mods": {
       "fabric-api": {
         "1.21.1": {
           "forge": null,
@@ -362,7 +362,7 @@ Example response:
 | `/v1/minecraft/versions` | Dynamic |
 | `/v1/loaders/{minecraft}` | 30 minutes |
 | `/v1/dependencies/{minecraft}` | 30 minutes |
-| `/v1/modrinth_mods/compatibility` | 30 minutes |
+| `/v1/mods/compatibility` | 30 minutes |
 
 Minecraft version data uses a tighter release-window policy:
 

@@ -36,17 +36,14 @@ pub fn sorted_cache_list(values: &[String]) -> String {
     sorted.join(",")
 }
 
-pub fn dependency_cache_key(minecraft: &str, modrinth_mods: &[String]) -> String {
-    format!(
-        "dependencies/{minecraft}?modrinth_mods={}",
-        sorted_cache_list(modrinth_mods)
-    )
+pub fn dependency_cache_key(minecraft: &str, mods: &[String]) -> String {
+    format!("dependencies/{minecraft}?mods={}", sorted_cache_list(mods))
 }
 
-pub fn compatibility_cache_key(modrinth_mods: &[String], minecraft_versions: &[String]) -> String {
+pub fn compatibility_cache_key(mods: &[String], minecraft_versions: &[String]) -> String {
     format!(
-        "compatibility?modrinth_mods={}&minecraft={}",
-        sorted_cache_list(modrinth_mods),
+        "compatibility?mods={}&minecraft={}",
+        sorted_cache_list(mods),
         sorted_cache_list(minecraft_versions)
     )
 }
@@ -113,7 +110,7 @@ mod tests {
             dependency_cache_key("1.21.4", &left),
             dependency_cache_key("1.21.4", &right)
         );
-        assert!(dependency_cache_key("1.21.4", &left).contains("modrinth_mods="));
+        assert!(dependency_cache_key("1.21.4", &left).contains("mods="));
 
         let versions_left = vec!["1.21.4".to_string(), "1.20.1".to_string()];
         let versions_right = vec!["1.20.1".to_string(), "1.21.4".to_string()];
@@ -121,7 +118,7 @@ mod tests {
             compatibility_cache_key(&left, &versions_left),
             compatibility_cache_key(&right, &versions_right)
         );
-        assert!(compatibility_cache_key(&left, &versions_left).contains("modrinth_mods="));
+        assert!(compatibility_cache_key(&left, &versions_left).contains("mods="));
     }
 
     #[test]

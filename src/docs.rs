@@ -225,12 +225,12 @@ pub fn api_docs() -> Value {
                     "minecraft": "Minecraft version id, for example 1.21.4"
                 },
                 "query_parameters": {
-                    "modrinth_mods": {
+                    "mods": {
                         "required": false,
                         "description": "Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied."
                     }
                 },
-                "default_modrinth_mods": [
+                "default_mods": [
                     "amber",
                     "fabric-api",
                     "modmenu",
@@ -322,10 +322,10 @@ pub fn api_docs() -> Value {
             },
             {
                 "method": "GET",
-                "path": "/v1/modrinth_mods/compatibility",
+                "path": "/v1/mods/compatibility",
                 "description": "Returns loader-specific Modrinth mod versions across multiple Minecraft versions.",
                 "query_parameters": {
-                    "modrinth_mods": {
+                    "mods": {
                         "required": true,
                         "description": "Comma-separated Modrinth mod slugs."
                     },
@@ -337,7 +337,7 @@ pub fn api_docs() -> Value {
                 "cache": "1800 seconds",
                 "failure_model": "Unresolved mod/version pairs return null loader fields.",
                 "data_shape": {
-                    "modrinth_mods": {
+                    "mods": {
                         "fabric-api": {
                             "1.21.4": {
                                 "forge": null,
@@ -350,7 +350,7 @@ pub fn api_docs() -> Value {
                 "example_response": {
                     "success": true,
                     "data": {
-                        "modrinth_mods": {
+                        "mods": {
                             "fabric-api": {
                                 "1.21.1": {
                                     "forge": null,
@@ -400,6 +400,6 @@ mod tests {
         assert!(paths.contains(&"/v1/minecraft/versions"));
         assert!(paths.contains(&"/v1/loaders/{minecraft}"));
         assert!(paths.contains(&"/v1/dependencies/{minecraft}"));
-        assert!(paths.contains(&"/v1/modrinth_mods/compatibility"));
+        assert!(paths.contains(&"/v1/mods/compatibility"));
     }
 }

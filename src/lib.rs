@@ -295,8 +295,14 @@ where
     let cache = Cache::default();
 
     if !bypass {
-        if let Some(response) = cache.get(cache_url.as_str(), false).await? {
-            return Ok(response);
+        if let Some(mut response) = cache.get(cache_url.as_str(), false).await? {
+            let body = response.text().await?;
+            let mut replay = Response::ok(body)?;
+            replay
+                .headers_mut()
+                .set("Content-Type", "application/json; charset=utf-8")?;
+            set_cache_headers(&mut replay, ttl_seconds)?;
+            return Ok(replay);
         }
     }
 

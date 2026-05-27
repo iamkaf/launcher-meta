@@ -243,7 +243,7 @@ async fn health(upstream_config: &service::UpstreamConfig) -> Result<Response> {
         ("forge", FORGE_METADATA_URL),
         ("neoforge", NEOFORGE_METADATA_URL),
         ("modrinth", "https://api.modrinth.com/v2/tag/game_version"),
-        ("parchment", "https://maven.parchmentmc.org/"),
+        ("parchment", PARCHMENT_REPOSITORY_URL),
         ("maven_plugins", FORGEGRADLE_METADATA_URL),
     ];
 

@@ -1,6 +1,9 @@
 use std::collections::BTreeSet;
 
-use crate::config::{MINECRAFT_THURSDAY_TTL, MINECRAFT_TUESDAY_TTL, MINECRAFT_WEDNESDAY_TTL};
+use crate::config::{
+    MAX_COMPATIBILITY_MINECRAFT_VERSIONS, MAX_MOD_ID_LENGTH, MAX_MODS_PER_REQUEST,
+    MINECRAFT_THURSDAY_TTL, MINECRAFT_TUESDAY_TTL, MINECRAFT_WEDNESDAY_TTL,
+};
 
 pub fn normalize_list(input: Option<&str>, defaults: &[&str]) -> Vec<String> {
     let values: Vec<String> = match input {
@@ -67,6 +70,53 @@ pub fn validate_minecraft(version: &str) -> Result<(), String> {
     Ok(())
 }
 
+pub fn validate_mods(mods: &[String]) -> Result<(), String> {
+    if mods.len() > MAX_MODS_PER_REQUEST {
+        return Err(format!(
+            "mods query parameter supports at most {MAX_MODS_PER_REQUEST} entries"
+        ));
+    }
+
+    for id in mods {
+        validate_mod_id(id)?;
+    }
+
+    Ok(())
+}
+
+pub fn validate_mod_id(id: &str) -> Result<(), String> {
+    if id.is_empty() || id.len() > MAX_MOD_ID_LENGTH {
+        return Err(format!(
+            "mod ids must be non-empty and at most {MAX_MOD_ID_LENGTH} characters"
+        ));
+    }
+
+    if !id
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_'))
+    {
+        return Err(
+            "mod ids may only contain ASCII letters, digits, hyphens, and underscores".to_string(),
+        );
+    }
+
+    Ok(())
+}
+
+pub fn validate_compatibility_minecraft_versions(versions: &[String]) -> Result<(), String> {
+    if versions.len() > MAX_COMPATIBILITY_MINECRAFT_VERSIONS {
+        return Err(format!(
+            "minecraft query parameter supports at most {MAX_COMPATIBILITY_MINECRAFT_VERSIONS} entries"
+        ));
+    }
+
+    for version in versions {
+        validate_minecraft(version)?;
+    }
+
+    Ok(())
+}
+
 pub fn minecraft_manifest_ttl_for_utc_day(utc_day: u32, normal_ttl: u64) -> u64 {
     match utc_day {
         2 => MINECRAFT_TUESDAY_TTL,
@@ -126,6 +176,26 @@ mod tests {
         assert!(validate_minecraft("1.21.4").is_ok());
         assert!(validate_minecraft("25w14craftmine").is_ok());
         assert!(validate_minecraft("../bad").is_err());
+    }
+
+    #[test]
+    fn validates_mod_lists() {
+        assert!(validate_mods(&["fabric-api".to_string(), "modmenu".to_string()]).is_ok());
+        assert!(validate_mods(&["bad/slug".to_string()]).is_err());
+        assert!(validate_mods(&["a".repeat(MAX_MOD_ID_LENGTH + 1)]).is_err());
+
+        let too_many = (0..=MAX_MODS_PER_REQUEST)
+            .map(|index| format!("mod-{index}"))
+            .collect::<Vec<_>>();
+        assert!(validate_mods(&too_many).is_err());
+    }
+
+    #[test]
+    fn validates_compatibility_minecraft_list_size() {
+        let too_many = (0..=MAX_COMPATIBILITY_MINECRAFT_VERSIONS)
+            .map(|index| format!("1.21.{index}"))
+            .collect::<Vec<_>>();
+        assert!(validate_compatibility_minecraft_versions(&too_many).is_err());
     }
 
     #[test]

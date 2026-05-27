@@ -215,6 +215,8 @@ Returns built-in loader/build dependencies plus Modrinth mod metadata for one Mi
 | --- | --- | --- |
 | `mods` | No | Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied |
 
+`mods` accepts up to 32 entries. Mod ids may contain ASCII letters, digits, hyphens, and underscores, with a maximum length of 128 characters.
+
 Default Modrinth mods:
 
 | Mod |
@@ -322,6 +324,8 @@ Returns loader-specific Modrinth mod versions across multiple Minecraft versions
 | `minecraft` | Yes | Comma-separated Minecraft version ids |
 
 Unresolved mod/version pairs return `null` loader fields.
+
+Compatibility requests accept up to 32 mods and 16 Minecraft versions.
 
 ```sh
 curl "https://launcher-meta.kaf.sh/v1/mods/compatibility?mods=fabric-api,modmenu&minecraft=1.21.1,1.21.4"

@@ -80,6 +80,20 @@ pub fn api_docs() -> Value {
                 }
             }
         },
+        "request_limits": {
+            "mods": {
+                "max_entries": 32,
+                "max_id_length": 128,
+                "allowed_characters": "ASCII letters, digits, hyphen, underscore"
+            },
+            "compatibility_minecraft_versions": {
+                "max_entries": 16
+            },
+            "deprecated_query_parameters": {
+                "projects": "rejected; use mods",
+                "modrinth_mods": "rejected; use mods"
+            }
+        },
         "endpoints": [
             {
                 "method": "GET",
@@ -227,7 +241,9 @@ pub fn api_docs() -> Value {
                 "query_parameters": {
                     "mods": {
                         "required": false,
-                        "description": "Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied."
+                        "description": "Comma-separated Modrinth mod slugs. Replaces the default Modrinth mod list when supplied.",
+                        "max_entries": 32,
+                        "allowed_characters": "ASCII letters, digits, hyphen, underscore"
                     }
                 },
                 "default_mods": [
@@ -327,11 +343,14 @@ pub fn api_docs() -> Value {
                 "query_parameters": {
                     "mods": {
                         "required": true,
-                        "description": "Comma-separated Modrinth mod slugs."
+                        "description": "Comma-separated Modrinth mod slugs.",
+                        "max_entries": 32,
+                        "allowed_characters": "ASCII letters, digits, hyphen, underscore"
                     },
                     "minecraft": {
                         "required": true,
-                        "description": "Comma-separated Minecraft version ids."
+                        "description": "Comma-separated Minecraft version ids.",
+                        "max_entries": 16
                     }
                 },
                 "cache": "1800 seconds",

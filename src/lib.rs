@@ -16,7 +16,7 @@ use crate::types::*;
 use crate::util::{
     compatibility_cache_key, current_utc_day, dependency_cache_key,
     minecraft_manifest_ttl_for_utc_day, normalize_list, now_iso, rate_limit_key,
-    validate_minecraft,
+    validate_compatibility_minecraft_versions, validate_minecraft, validate_mods,
 };
 #[cfg(target_arch = "wasm32")]
 use std::collections::BTreeMap;
@@ -99,7 +99,13 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
+            if query.contains_key("projects") || query.contains_key("modrinth_mods") {
+                return json_error("use mods query parameter", 400);
+            }
             let mods = normalize_list(query.get("mods").map(String::as_str), DEFAULT_MODS);
+            if let Err(error) = validate_mods(&mods) {
+                return json_error(&error, 400);
+            }
             let key = dependency_cache_key(minecraft, &mods);
             let upstream = upstream.clone();
             cached(
@@ -126,6 +132,9 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
                 .query_pairs()
                 .into_owned()
                 .collect::<BTreeMap<_, _>>();
+            if query.contains_key("projects") || query.contains_key("modrinth_mods") {
+                return json_error("use mods query parameter", 400);
+            }
             let Some(mods_raw) = query.get("mods") else {
                 return json_error("mods query parameter is required", 400);
             };
@@ -138,10 +147,11 @@ async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
             if mods.is_empty() || minecraft_versions.is_empty() {
                 return json_error("mods and minecraft query parameters must not be empty", 400);
             }
-            for minecraft in &minecraft_versions {
-                if let Err(error) = route_minecraft(minecraft) {
-                    return json_error(&error, 400);
-                }
+            if let Err(error) = validate_mods(&mods) {
+                return json_error(&error, 400);
+            }
+            if let Err(error) = validate_compatibility_minecraft_versions(&minecraft_versions) {
+                return json_error(&error, 400);
             }
 
             let key = compatibility_cache_key(&mods, &minecraft_versions);

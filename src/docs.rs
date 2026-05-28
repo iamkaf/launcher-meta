@@ -34,7 +34,7 @@ pub fn api_docs() -> Value {
         "disclaimers": [
             "launcher-meta is not affiliated with Mojang, Microsoft, FabricMC, Minecraft Forge, NeoForge, Modrinth, ParchmentMC, or Cloudflare.",
             "Minecraft names, loader names, Modrinth mod names, and service names belong to their respective owners.",
-            "The API reports metadata from upstream services and caches successful responses at the edge. Treat versions as metadata snapshots, not endorsements or compatibility guarantees."
+            "The API reports metadata from upstream services and caches successful responses at the edge unless they contain item-level errors. Treat versions as metadata snapshots, not endorsements or compatibility guarantees."
         ],
         "acknowledgements": [
             "Mojang version manifest",
@@ -55,7 +55,8 @@ pub fn api_docs() -> Value {
             },
             "loaders": "1800 seconds",
             "dependencies": "1800 seconds",
-            "compatibility": "1800 seconds"
+            "compatibility": "1800 seconds",
+            "item_errors": "Responses with item-level status=error are not cached. Responses with status=unavailable are cacheable."
         },
         "rate_limits": {
             "scope": "per client key per Cloudflare location",

@@ -344,10 +344,11 @@ where
         Ok(payload) => payload,
         Err(error) => return json_error(&error, 500),
     };
+    let cacheable = payload_is_cacheable(&payload);
     let mut response = json_ok(payload)?;
     set_cache_headers(&mut response, ttl_seconds)?;
 
-    if response.status_code() == 200 {
+    if response.status_code() == 200 && cacheable {
         let mut cache_response = response.cloned()?;
         set_cache_headers(&mut cache_response, ttl_seconds)?;
         ctx.wait_until(async move {
@@ -356,6 +357,27 @@ where
     }
 
     Ok(response)
+}
+
+fn payload_is_cacheable<T: serde::Serialize>(payload: &crate::types::ApiResponse<T>) -> bool {
+    if !payload.success {
+        return false;
+    }
+
+    serde_json::to_value(payload)
+        .map(|value| !contains_error_status(&value))
+        .unwrap_or(false)
+}
+
+fn contains_error_status(value: &serde_json::Value) -> bool {
+    match value {
+        serde_json::Value::Array(values) => values.iter().any(contains_error_status),
+        serde_json::Value::Object(fields) => {
+            fields.get("status").and_then(serde_json::Value::as_str) == Some("error")
+                || fields.values().any(contains_error_status)
+        }
+        _ => false,
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -424,4 +446,56 @@ fn with_cors(mut response: Response) -> Result<Response> {
 #[cfg(target_arch = "wasm32")]
 fn options_response() -> Result<Response> {
     with_cors(Response::empty()?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::ApiResponse;
+    use serde_json::json;
+
+    #[test]
+    fn cacheable_payload_rejects_item_level_errors() {
+        let payload = ApiResponse::success(
+            json!({
+                "dependencies": [
+                    {
+                        "id": "loom",
+                        "status": "error",
+                        "error": "TimeoutError"
+                    }
+                ]
+            }),
+            "2026-05-28T00:00:00.000Z".to_string(),
+        );
+
+        assert!(!payload_is_cacheable(&payload));
+    }
+
+    #[test]
+    fn cacheable_payload_allows_unavailable_items() {
+        let payload = ApiResponse::success(
+            json!({
+                "dependencies": [
+                    {
+                        "id": "rei",
+                        "status": "unavailable"
+                    }
+                ]
+            }),
+            "2026-05-28T00:00:00.000Z".to_string(),
+        );
+
+        assert!(payload_is_cacheable(&payload));
+    }
+
+    #[test]
+    fn cacheable_payload_rejects_route_errors() {
+        let payload = ApiResponse::<serde_json::Value>::error(
+            "upstream aggregation failure",
+            "2026-05-28T00:00:00.000Z".to_string(),
+        );
+
+        assert!(!payload_is_cacheable(&payload));
+    }
 }

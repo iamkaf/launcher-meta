@@ -38,7 +38,7 @@ Batch endpoints keep returning useful data when one upstream mod fails or a depe
 
 `launcher-meta` is not affiliated with Mojang, Microsoft, FabricMC, Minecraft Forge, NeoForge, Modrinth, ParchmentMC, or Cloudflare. Minecraft names, loader names, Modrinth mod names, and service names belong to their respective owners.
 
-The API reports metadata from upstream services and caches successful responses at the edge. Treat versions as metadata snapshots, not as an endorsement or guarantee that a dependency is safe, compatible with every modpack, or available forever.
+The API reports metadata from upstream services and caches successful responses at the edge unless they contain item-level errors. Treat versions as metadata snapshots, not as an endorsement or guarantee that a dependency is safe, compatible with every modpack, or available forever.
 
 ## API
 
@@ -371,6 +371,8 @@ Example response:
 | `/v1/loaders/{minecraft}` | 30 minutes |
 | `/v1/dependencies/{minecraft}` | 30 minutes |
 | `/v1/mods/compatibility` | 30 minutes |
+
+Responses with item-level `status: "error"` are not cached. Responses with `status: "unavailable"` are cacheable.
 
 Minecraft version data uses a tighter release-window policy:
 

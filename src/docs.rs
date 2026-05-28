@@ -261,9 +261,10 @@ pub fn api_docs() -> Value {
                     "loom"
                 ],
                 "cache": "1800 seconds",
-                "failure_model": "Partial failures return HTTP 200 with per-item status=error.",
+                "failure_model": "Partial failures return HTTP 200 with per-item status=error. Available projects with no version for the requested Minecraft version return status=unavailable.",
                 "rules": {
-                    "parchment": "Parchment is unavailable for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at 26.1."
+                    "parchment": "Parchment is unavailable for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at 26.1.",
+                    "modrinth": "Modrinth mods are unavailable when the project exists but has no version for the requested Minecraft version."
                 },
                 "data_shape": {
                     "minecraft": "1.21.4",

@@ -506,7 +506,7 @@ async fn resolve_modrinth_project(
         .iter()
         .max_by_key(|version| &version.date_published)
     else {
-        return dependency_error(project, "mod", &source, "no Modrinth versions found");
+        return dependency_unavailable(project, "mod", &source);
     };
 
     let mut loader_versions = LoaderVersions::default();
@@ -561,6 +561,19 @@ fn dependency_error(
         coordinates: None,
         source: source.to_string(),
         error: Some(error.into()),
+    }
+}
+
+fn dependency_unavailable(id: &str, kind: &str, source: &str) -> DependencyItem {
+    DependencyItem {
+        id: id.to_string(),
+        kind: kind.to_string(),
+        status: ItemStatus::Unavailable,
+        version: None,
+        loader_versions: LoaderVersions::default(),
+        coordinates: None,
+        source: source.to_string(),
+        error: None,
     }
 }
 
@@ -619,6 +632,14 @@ mod tests {
         let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains(r#""status":"error""#));
         assert!(json.contains(r#""error":"not found""#));
+    }
+
+    #[test]
+    fn unavailable_dependency_serializes_without_error() {
+        let item = dependency_unavailable("rei", "mod", "https://modrinth.com/mod/rei");
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains(r#""status":"unavailable""#));
+        assert!(!json.contains(r#""error""#));
     }
 
     #[test]

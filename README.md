@@ -32,7 +32,7 @@ Ask for metadata
   -> refresh with a header when you need fresh data now
 ```
 
-Batch endpoints keep returning useful data when one upstream mod fails. Failed items carry `status: "error"` and an `error` field.
+Batch endpoints keep returning useful data when one upstream mod fails or a dependency is unavailable for the requested Minecraft version. Failed items carry `status: "error"` and an `error` field; unavailable items carry `status: "unavailable"` without an `error` field.
 
 ## Disclaimers
 
@@ -243,6 +243,8 @@ Built-ins are always included:
 
 Parchment is returned as `status: "unavailable"` for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at `26.1`.
 
+Modrinth mods are returned as `status: "unavailable"` when the project exists but has no version for the requested Minecraft version.
+
 Dependency items include:
 
 | Field | Description |
@@ -389,7 +391,7 @@ Minecraft version data uses a tighter release-window policy:
 | `404` | Unknown route |
 | `500` | Unexpected worker or upstream aggregation failure |
 
-Batch endpoints prefer partial results over route-level failure. Check item-level `status` and `error` fields before using a dependency version.
+Batch endpoints prefer partial results over route-level failure. Check item-level `status` before using a dependency version; `error` is only present for real failures.
 
 ## Rate Limits
 

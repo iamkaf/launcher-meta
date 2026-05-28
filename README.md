@@ -158,6 +158,8 @@ curl https://launcher-meta.kaf.sh/v1/minecraft/versions
 
 Returns Fabric, Forge, and NeoForge loader metadata for one Minecraft version.
 
+Loaders are returned as `status: "unavailable"` when a loader does not provide a version for the requested Minecraft version.
+
 | Field | Description |
 | --- | --- |
 | `loader` | `fabric`, `forge`, or `neoforge` |

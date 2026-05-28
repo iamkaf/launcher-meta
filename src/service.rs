@@ -117,29 +117,32 @@ async fn resolve_fabric_loader(minecraft: &str, config: &UpstreamConfig) -> Load
             source: url,
             error: None,
         },
+        Err(error) if is_upstream_404(&error) => loader_unavailable("fabric", &url),
         Err(error) => loader_error("fabric", &url, error),
     }
 }
 
+fn is_upstream_404(error: &str) -> bool {
+    error == "upstream returned HTTP 404"
+}
+
 #[cfg(target_arch = "wasm32")]
 async fn resolve_forge_loader(minecraft: &str, config: &UpstreamConfig) -> LoaderItem {
-    match fetch_text(FORGE_METADATA_URL, config)
-        .await
-        .and_then(|body| {
-            latest_forge_version(&body, minecraft)
-                .ok_or_else(|| format!("no Forge loader found for Minecraft {minecraft}"))
-        }) {
-        Ok(version) => {
-            let artifact = installer_artifact_version("forge", minecraft, &version);
-            LoaderItem {
-                loader: "forge".to_string(),
-                status: ItemStatus::Ok,
-                version: Some(artifact.clone()),
-                maven: Some(format!("net.minecraftforge:forge:{artifact}:installer")),
-                source: FORGE_METADATA_URL.to_string(),
-                error: None,
+    match fetch_text(FORGE_METADATA_URL, config).await {
+        Ok(body) => match latest_forge_version(&body, minecraft) {
+            Some(version) => {
+                let artifact = installer_artifact_version("forge", minecraft, &version);
+                LoaderItem {
+                    loader: "forge".to_string(),
+                    status: ItemStatus::Ok,
+                    version: Some(artifact.clone()),
+                    maven: Some(format!("net.minecraftforge:forge:{artifact}:installer")),
+                    source: FORGE_METADATA_URL.to_string(),
+                    error: None,
+                }
             }
-        }
+            None => loader_unavailable("forge", FORGE_METADATA_URL),
+        },
         Err(error) => loader_error("forge", FORGE_METADATA_URL, error),
     }
 }
@@ -153,25 +156,25 @@ async fn resolve_neoforge_loader(minecraft: &str, config: &UpstreamConfig) -> Lo
         NEOFORGE_METADATA_URL
     };
 
-    match fetch_text(url, config).await.and_then(|body| {
-        latest_neoforge_version(&body, source, minecraft)
-            .ok_or_else(|| format!("no NeoForge loader found for Minecraft {minecraft}"))
-    }) {
-        Ok(version) => {
-            let group_artifact = if source.artifact_kind == "neoforge-legacy" {
-                "net.neoforged:forge"
-            } else {
-                "net.neoforged:neoforge"
-            };
-            LoaderItem {
-                loader: "neoforge".to_string(),
-                status: ItemStatus::Ok,
-                version: Some(version.clone()),
-                maven: Some(format!("{group_artifact}:{version}:installer")),
-                source: url.to_string(),
-                error: None,
+    match fetch_text(url, config).await {
+        Ok(body) => match latest_neoforge_version(&body, source, minecraft) {
+            Some(version) => {
+                let group_artifact = if source.artifact_kind == "neoforge-legacy" {
+                    "net.neoforged:forge"
+                } else {
+                    "net.neoforged:neoforge"
+                };
+                LoaderItem {
+                    loader: "neoforge".to_string(),
+                    status: ItemStatus::Ok,
+                    version: Some(version.clone()),
+                    maven: Some(format!("{group_artifact}:{version}:installer")),
+                    source: url.to_string(),
+                    error: None,
+                }
             }
-        }
+            None => loader_unavailable("neoforge", url),
+        },
         Err(error) => loader_error("neoforge", url, error),
     }
 }
@@ -184,6 +187,17 @@ fn loader_error(loader: &str, source: &str, error: String) -> LoaderItem {
         maven: None,
         source: source.to_string(),
         error: Some(error),
+    }
+}
+
+fn loader_unavailable(loader: &str, source: &str) -> LoaderItem {
+    LoaderItem {
+        loader: loader.to_string(),
+        status: ItemStatus::Unavailable,
+        version: None,
+        maven: None,
+        source: source.to_string(),
+        error: None,
     }
 }
 
@@ -637,6 +651,26 @@ mod tests {
     #[test]
     fn unavailable_dependency_serializes_without_error() {
         let item = dependency_unavailable("rei", "mod", "https://modrinth.com/mod/rei");
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains(r#""status":"unavailable""#));
+        assert!(!json.contains(r#""error""#));
+    }
+
+    #[test]
+    fn unavailable_loader_serializes_without_error() {
+        let item = loader_unavailable("forge", FORGE_METADATA_URL);
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains(r#""status":"unavailable""#));
+        assert!(!json.contains(r#""error""#));
+    }
+
+    #[test]
+    fn unavailable_loader_dependency_serializes_without_error() {
+        let item = loader_dependency(
+            "forge",
+            "loader",
+            loader_unavailable("forge", FORGE_METADATA_URL),
+        );
         let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains(r#""status":"unavailable""#));
         assert!(!json.contains(r#""error""#));

@@ -183,6 +183,9 @@ pub fn api_docs() -> Value {
                     "minecraft": "Minecraft version id, for example 1.21.4"
                 },
                 "cache": "1800 seconds",
+                "rules": {
+                    "unavailable": "A loader is unavailable when it does not provide a version for the requested Minecraft version."
+                },
                 "data_shape": {
                     "minecraft": "1.21.4",
                     "loaders": [

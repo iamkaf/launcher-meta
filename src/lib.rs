@@ -451,7 +451,7 @@ fn options_response() -> Result<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::ApiResponse;
+    use crate::types::{ApiResponse, ItemStatus, LoaderItem, LoadersData};
     use serde_json::json;
 
     #[test]
@@ -497,5 +497,47 @@ mod tests {
         );
 
         assert!(!payload_is_cacheable(&payload));
+    }
+
+    #[test]
+    fn cacheable_payload_rejects_loader_item_errors() {
+        let payload = ApiResponse::success(
+            LoadersData {
+                minecraft: "26.1.2".to_string(),
+                loaders: vec![LoaderItem {
+                    loader: "forge".to_string(),
+                    status: ItemStatus::Error,
+                    version: None,
+                    maven: None,
+                    source: "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
+                        .to_string(),
+                    error: Some("TimeoutError".to_string()),
+                }],
+            },
+            "2026-05-28T00:00:00.000Z".to_string(),
+        );
+
+        assert!(!payload_is_cacheable(&payload));
+    }
+
+    #[test]
+    fn cacheable_payload_allows_unavailable_loader_items() {
+        let payload = ApiResponse::success(
+            LoadersData {
+                minecraft: "26.1.2".to_string(),
+                loaders: vec![LoaderItem {
+                    loader: "forge".to_string(),
+                    status: ItemStatus::Unavailable,
+                    version: None,
+                    maven: None,
+                    source: "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
+                        .to_string(),
+                    error: None,
+                }],
+            },
+            "2026-05-28T00:00:00.000Z".to_string(),
+        );
+
+        assert!(payload_is_cacheable(&payload));
     }
 }

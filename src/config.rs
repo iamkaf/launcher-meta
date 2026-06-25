@@ -39,6 +39,7 @@ pub const MODDEV_GRADLE_METADATA_URL: &str =
     "https://maven.neoforged.net/releases/net/neoforged/moddev-gradle/maven-metadata.xml";
 pub const LOOM_METADATA_URL: &str =
     "https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml";
+pub const STONECUTTER_METADATA_URL: &str = "https://plugins.gradle.org/m2/dev/kikugie/stonecutter/dev.kikugie.stonecutter.gradle.plugin/maven-metadata.xml";
 
 pub const BUILT_INS: &[&str] = &[
     "forge",
@@ -49,6 +50,7 @@ pub const BUILT_INS: &[&str] = &[
     "forgegradle",
     "moddev-gradle",
     "loom",
+    "stonecutter",
 ];
 
 pub const DEFAULT_MODS: &[&str] = &[

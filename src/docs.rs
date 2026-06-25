@@ -262,7 +262,8 @@ pub fn api_docs() -> Value {
                     "neoform",
                     "forgegradle",
                     "moddev-gradle",
-                    "loom"
+                    "loom",
+                    "stonecutter"
                 ],
                 "cache": "1800 seconds",
                 "failure_model": "Partial failures return HTTP 200 with per-item status=error. Available projects with no version for the requested Minecraft version return status=unavailable.",

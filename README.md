@@ -242,6 +242,7 @@ Built-ins are always included:
 | `forgegradle` |
 | `moddev-gradle` |
 | `loom` |
+| `stonecutter` |
 
 Parchment is returned as `status: "unavailable"` for unobfuscated Minecraft versions. Minecraft is treated as unobfuscated starting at `26.1`.
 

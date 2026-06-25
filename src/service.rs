@@ -277,6 +277,16 @@ async fn dependency_for_minecraft(
             .await
         }
         "loom" => resolve_loom(minecraft, config).await,
+        "stonecutter" => {
+            resolve_latest_maven(
+                "stonecutter",
+                "tool",
+                STONECUTTER_METADATA_URL,
+                "https://plugins.gradle.org/plugin/dev.kikugie.stonecutter",
+                config,
+            )
+            .await
+        }
         project => resolve_modrinth_project(project, minecraft, config).await,
     }
 }
